@@ -243,9 +243,9 @@ def update_data_collection():
   for missing_area_item in data_collection:
     if cur_date not in missing_area_item.keys():
       missing_area_item[cur_date] = {'确诊': 0, '疑似': 0, '治愈': 0, '死亡': 0}
-  cur_data.sort(key=lambda k: (k.get('name', 0)))
-  cur_data.sort(key=lambda k: ((k.get(cur_date, 0)).get('疑似', 0)), reverse=True)
-  cur_data.sort(key=lambda k: ((k.get(cur_date, 0)).get('确诊', 0)), reverse=True)
+  data_collection.sort(key=lambda k: (k.get('name', 0)))
+  data_collection.sort(key=lambda k: ((k.get(cur_date, 0)).get('疑似', 0)), reverse=True)
+  data_collection.sort(key=lambda k: ((k.get(cur_date, 0)).get('确诊', 0)), reverse=True)
   return
 
 
@@ -263,6 +263,7 @@ def main():
     save_csv(file_path, cur_data)
     exit()
   update_data_collection()
+  __logger__.debug(data_collection)
   save_csv(file_path, data_collection)
 
 
