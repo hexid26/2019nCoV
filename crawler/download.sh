@@ -28,6 +28,8 @@ vpslist='96.30.193.243 139.180.130.111 167.179.72.4'
 scp root@96.30.193.243:/root/2019nCoV/history.csv ${BASEPATH}/csv/data_us.csv
 scp root@167.179.72.4:/root/2019nCoV/history.csv ${BASEPATH}/csv/data_jp.csv
 scp root@139.180.130.111:/root/2019nCoV/history.csv ${BASEPATH}/csv/data_sgp.csv
+scp root@139.180.130.111:/root/2019nCoV/json/* ${BASEPATH}/json/
+scp root@139.180.130.111:/root/2019nCoV/history-areas* ${BASEPATH}/
 
 tput setaf 2
 echo "# ${SCRIPT_NAME} Done"
