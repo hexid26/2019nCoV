@@ -118,8 +118,11 @@
                   gridIndex: 0,
                   smooth: true,
                   seriesLayoutBy: "row",
-                  symbolSize: 8,
+                  symbolSize: 12,
                   color: "red",
+                  lineStyle: {
+                    width: 5
+                  },
                   label: {
                     show: true,
                     fontSize: 15
@@ -190,7 +193,7 @@
               },
               tooltip: {
                 trigger: "axis",
-                showContent: true,
+                showContent: true
               },
               dataset: {
                 // source: dataset_example
@@ -211,8 +214,8 @@
                 nameTextStyle: { fontSize: 16 },
                 axisLabel: {
                   fontSize: 15,
-                  interval: "auto",
-                //   formatter: "{value}%"
+                  interval: "auto"
+                  //   formatter: "{value}%"
                 }
               },
               series: [
@@ -221,12 +224,15 @@
                   gridIndex: 0,
                   smooth: true,
                   seriesLayoutBy: "row",
-                  symbolSize: 8,
+                  symbolSize: 12,
                   color: "red",
+                  lineStyle: {
+                    width: 5
+                  },
                   label: {
                     show: true,
                     fontSize: 15,
-                    position: "top",
+                    position: "top"
                     // formatter: '{@[1]}%'
                   }
                 },
@@ -240,7 +246,7 @@
                   label: {
                     show: true,
                     fontSize: 15,
-                    position: "top",
+                    position: "top"
                     // formatter: '{@[2]}%'
                   }
                 },
@@ -252,9 +258,9 @@
                   symbolSize: 8,
                   color: "green",
                   label: {
-                    show: true,
+                    show: false,
                     fontSize: 15,
-                    position: "top",
+                    position: "top"
                     // formatter: '{@[3]}%'
                   }
                 },
@@ -266,9 +272,9 @@
                   symbolSize: 8,
                   color: "black",
                   label: {
-                    show: true,
+                    show: false,
                     fontSize: 15,
-                    position: "top",
+                    position: "top"
                     // formatter: '{@[4]}%'
                   }
                 }
