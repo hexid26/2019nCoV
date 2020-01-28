@@ -94,7 +94,11 @@ def merge_cities(processed_json_cities, add_cities, day_index):
       processed_json_data_cur_city["suspectedCount"].insert(0, city["suspectedCount"])
       processed_json_data_cur_city["curedCount"].insert(0, city["curedCount"])
       processed_json_data_cur_city["deadCount"].insert(0, city["deadCount"])
-      missing_city_list.remove(processed_json_data_cur_city["cityName"])
+      if processed_json_data_cur_city["cityName"] not in missing_city_list:
+        # ! 锡林郭勒盟 会导致这里出问题
+        pass
+      else:
+        missing_city_list.remove(processed_json_data_cur_city["cityName"])
   for city_name in missing_city_list:
     # ! 补全缺失的现有 城市 数据
     miss_city = list(filter(lambda x: x["cityName"] == city_name, processed_json_cities))[0]
