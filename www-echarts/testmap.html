@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html style="height: 100%">
+  <head>
+    <meta charset="utf-8" />
+    <title>2019nCoV全国疫情</title>
+    <div id="head" style="BACKGROUND: #d32121; width: 100%; height: 100px;">
+      <div style="height: 3px"></div>
+      <div style="text-align: center; font-size: 20pt; color: #ffffff;">
+        2019nCoV 全国疫情
+      </div>
+      <div style="text-align: center; font-size: 14pt; color: #ffffff;">
+        Author：<a
+          href="mailto:houhaixiang@cetccloud.com"
+          style="color:#97d5ff;"
+          >Haixiang Hou</a
+        >，<a href="mailto:chenxull@hust.edu.cn" style="color:#97d5ff;"
+          >Xu Chen</a
+        >
+      </div>
+      <div style="height: 3px"></div>
+      <div style="text-align: center; font-size: 12pt; color: #ffffff;">
+        数据来源<a
+          href="https://3g.dxy.cn/newh5/view/pneumonia?scene=2&clicktime=1579581727&enterid=1579581727&from=timeline&isappinstalled=0"
+          target="_blank"
+          style="color:#97ffb1;"
+        >
+          丁香园</a
+        >
+        &emsp;图表互动
+        <a
+          href="https://3g.dxy.cn/newh5/view/pneumonia?scene=2&clicktime=1579581727&enterid=1579581727&from=timeline&isappinstalled=0"
+          target="_blank"
+          style="color:#97ffb1;"
+          >Echarts Project</a
+        >&emsp;<font color="#333333">手机横屏体验更加</font>
+      </div>
+    </div>
+    <script type="text/javascript" id="isMobile">
+      var isMobile = /Android|webOS|iPhone|iPad|BlackBerry/i.test(
+        navigator.userAgent
+      );
+      var click_method = "click";
+      if (isMobile) {
+        click_method = "touchend";
+      } else {
+        click_method = "click";
+      }
+    </script>
+  </head>
+  <body style="height: 100%; margin: 0">
+    <script src="jquery.js"></script>
+    <script src="echarts.min.js"></script>
+    <div
+      id="chinaChart_bg"
+      style="BACKGROUND: #000000;width: 100%; height: 500px;"
+    >
+      <div
+        id="chinaChart"
+        style="BACKGROUND: #dfdfdf;width: 100%; height: 500px;"
+      ></div>
+    </div>
+    <div id="population" style="width: 100%; height: 300px;">
+      <div
+        id="provincePie"
+        style="BACKGROUND: #fdcbcb; width: 30%; height: 300px; float: left"
+      ></div>
+      <div
+        id="populationChart"
+        style="BACKGROUND: #d4eeff; width: 70%; height: 300px; float: left"
+      ></div>
+    </div>
+    <script type="text/javascript" id="read_data_script">
+      var geoJson = "";
+      var global_date_list = [];
+      var global_date_list_end = 0;
+      var global_json = [];
+      var global_china_dataset = [];
+      var load_done = false;
+      read_china_json = $.ajax({
+        async: true,
+        global: true,
+        url: "china.json",
+        beforeSend: function() {},
+        success: function(data) {
+          geoJson = data;
+        }
+      });
+      read_global_json = $.ajax({
+        async: true,
+        global: true,
+        url: "history-areas.json",
+        beforeSend: function() {},
+        success: function(data) {
+          global_date_list = data[0].reverse();
+          global_date_list_end = global_date_list.length - 1;
+          global_json = data.slice(1);
+          load_done = true;
+        }
+      });
+      read_nation_json = $.ajax({
+        async: true,
+        global: true,
+        url: "history.csv",
+        success: function(read_data) {
+          data_csv_lines = read_data.split("\n");
+          for (let line_id = 0; line_id < 5; line_id++) {
+            global_china_dataset[line_id] = new Array();
+            data_csv_lines[line_id]
+              .split(",")
+              .forEach(function(data, index, arr) {
+                if (line_id == 0) {
+                  if (index > 0) {
+                    global_china_dataset[line_id].push(data);
+                  }
+                } else {
+                  if (index == 1) {
+                    global_china_dataset[line_id].push(data);
+                  } else if (index > 1) {
+                    global_china_dataset[line_id].push(+data);
+                  }
+                }
+              });
+          }
+        }
+      });
+      function sleep(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+      }
+    </script>
+    <script type="text/javascript" id="chinaChartScript">
+      var chinaChart = echarts.init(document.getElementById("chinaChart"));
+      chinaChart.showLoading();
+      var option_chinaChart = "";
+      var province_dataset = new Array();
+      function init_chinaChart() {
+        set_option_chinaChart();
+        //read_china_json请求完毕时执行
+        $.when(read_china_json).done(function() {
+          echarts.registerMap("china", geoJson);
+          $.when(read_china_json).done(async function() {
+            while (load_done == false) {
+              await sleep(30);
+            }
+            for (let index = 0; index < global_json.length; index++) {
+              province_dataset[index] = {
+                name: global_json[index]["provinceShortName"],
+                value:
+                  global_json[index]["confirmedCount"][global_date_list_end]
+              };
+            }
+            // 开始画其它图
+            init_provincePie("中国");
+            init_populationChart("中国", "中国");
+            option_chinaChart["series"][0]["data"] = province_dataset;
+            chinaChart.hideLoading();
+            chinaChart.setOption(option_chinaChart);
+          });
+        });
+      }
+      function set_option_chinaChart() {
+        option_chinaChart = {
+          title: {
+            text: "2019nCoV in China",
+            subtext: "点击 省份 查看当地疫情\n\n点击 空白 查看全国疫情",
+            subtextStyle: {
+              fontSize: 14,
+              color: "#666666"
+            }
+          },
+          tooltip: {
+            trigger: "item",
+            formatter: "{b}<br/>确诊 {c} 人"
+          },
+          toolbox: {
+            show: true,
+            orient: "vertical",
+            left: "right",
+            top: "center",
+            feature: {
+              dataView: { readOnly: false },
+              restore: {},
+              saveAsImage: {}
+            }
+          },
+          visualMap: {
+            type: "piecewise",
+            pieces: [
+              // { gt: 5000, label: ">5000", color: "#770000" },
+              { gt: 2000, label: ">2001", color: "#9C0000" },
+              { gt: 1000, lt: 2000, label: "1001~2000", color: "#C00000" },
+              { gt: 500, lt: 1000, label: "501~1000", color: "#E80000" },
+              { gt: 100, lt: 500, label: "101~500", color: "#FF4040" },
+              { gt: 50, lt: 100, label: "51~100", color: "#FF8080" },
+              { gt: 10, lt: 50, label: "11~50", color: "#FFBBBB" },
+              { gt: 0, lt: 10, label: "1~10", color: "#FFDBDB" },
+              { value: 0, label: "0", color: "#FFFFFF" }
+            ],
+            align: "auto",
+            itemHeight: 30,
+            itemWidth: 15,
+            itemGap: 5,
+            itemSymbol: "roundRect",
+            align: "left",
+            // orient: "horizontal",
+            top: "middle",
+            left: 20,
+            borderColor: "#FF0000",
+            borderWidth: 1,
+            selectedMode: false,
+            textStyle: { fontSize: 14 }
+          },
+          series: [
+            {
+              name: "全国各省市感染人数",
+              type: "map",
+              mapType: "china", // 自定义扩展图表类型
+              label: {
+                show: true
+              }
+            }
+          ]
+        };
+      }
+      //开启地图的点击事件，当点击具体省份时。绘制对应省份的地图
+      chinaChart.on("click", e => {
+        chinaMapClick(e);
+        event.stopPropagation();
+      });
+      function chinaMapClick(params) {
+        if (params.value == null) {
+          return;
+        }
+        var provinceName = params.data.name;
+        if (provinceName == "") {
+          provinceName = "中国";
+        }
+        init_provincePie(provinceName);
+        init_populationChart(provinceName, provinceName);
+      }
+      var aa = document.getElementById("chinaChart_bg");
+      if (isMobile) {
+        tap(aa, function(e) {
+          console.log(e);
+        });
+      } else {
+        aa.addEventListener(
+          click_method,
+          function(e) {
+            if (e) {
+              init_provincePie("中国");
+              init_populationChart("中国", "中国");
+            }
+          },
+          false
+        );
+      }
+      function tap(el, callBack) {
+        var startTime = 0;
+        var maxTime = 250;
+        var [startX, startY, endX, endY] = [0, 0, 0, 0]; //es6解构赋值
+        el.addEventListener("touchstart", function(e) {
+          console.log("touchstart");
+          startTime = Date.now(); //开始触摸的事件
+          startX = e.touches[0].clientX; //手指在浏览器横坐标
+          startY = e.touches[0].clientY; //手指在浏览器纵坐标
+        });
+        el.addEventListener("touchmove", function(e) {
+          console.log("touchmove");
+          endX = e.touches[0].clientX; //手指在浏览器横坐标
+          endY = e.touches[0].clientY; //手指在浏览器纵坐标
+        });
+        el.addEventListener("touchend", function(e) {
+          console.log("touchend");
+          if (Date.now() - startTime > maxTime) {
+            //如果超过了最大时间，不触发tap
+            console.log("超时了");
+            return;
+          }
+          //如果移动距离过大，则不是tap事件。为了大家在电脑上能看到效果，这里设置成了1000，因为在电脑上移动幅度不好控制。如果是在移动端，设置为30就差不多了。
+          if (Math.abs(endX - startX) > 800 || Math.abs(endY - startY) > 800) {
+            return;
+          }
+          init_provincePie("中国");
+          init_populationChart("中国", "中国");
+        });
+      }
+    </script>
+    <script type="text/javascript" id="provincePieScript">
+      var cur_provinceName;
+      let provincePie = echarts.init(document.getElementById("provincePie"));
+      provincePie.showLoading();
+      let option_provincePie = "";
+      //当鼠标事件触发时，获取传来的省份信息。从 global_json 中获取具体省份的城市信息
+      function init_provincePie(provinceName) {
+        cur_provinceName = provinceName;
+        set_option_provincePie(provinceName);
+        provincePie.hideLoading();
+        if (provinceName == "中国") {
+          option_provincePie["series"][0]["data"] = province_dataset;
+        } else {
+          var data = genCityData(provinceName);
+          option_provincePie["series"][0]["data"] = data.cities_dataset;
+        }
+        // 数据填充到图中
+        provincePie.setOption(option_provincePie);
+      }
+      function genCityData(provinceName) {
+        let cities_dataset = new Array();
+        //遍历 json 根据省的名称获取对应的城市数据
+        for (
+          let provinceIndex = 0;
+          provinceIndex < global_json.length;
+          provinceIndex++
+        ) {
+          if (
+            global_json[provinceIndex]["provinceShortName"] === provinceName
+          ) {
+            for (
+              let citiesIndex = 0;
+              citiesIndex < global_json[provinceIndex]["cities"].length;
+              citiesIndex++
+            ) {
+              var confirmedLength =
+                global_json[provinceIndex]["cities"][citiesIndex][
+                  "confirmedCount"
+                ].length - 1;
+              var cityName =
+                global_json[provinceIndex]["cities"][citiesIndex]["cityName"];
+              var confirmedCount =
+                global_json[provinceIndex]["cities"][citiesIndex][
+                  "confirmedCount"
+                ][confirmedLength];
+              cities_dataset.push({
+                name: cityName,
+                value: confirmedCount
+              });
+            }
+          }
+        }
+        return {
+          cities_dataset: cities_dataset
+        };
+      }
+      function set_option_provincePie(provinceName) {
+        // var data = genCityData(provinceName);
+        option_provincePie = {
+          title: {
+            text: provinceName + "疫情比例",
+            left: "center"
+          },
+          tooltip: {
+            trigger: "item"
+          },
+          series: [
+            {
+              type: "pie",
+              radius: "55%",
+              center: ["40%", "50%"]
+            }
+          ]
+        };
+      }
+      provincePie.on("click", provincePieClick);
+      function provincePieClick(params) {
+        var city_name = params.data.name;
+        if (cur_provinceName == "中国") {
+          init_populationChart(city_name, city_name);
+        } else {
+          init_populationChart(cur_provinceName, city_name);
+        }
+      }
+    </script>
+    <script type="text/javascript" id="populationChartScript">
+      var populationChart = echarts.init(
+        document.getElementById("populationChart")
+      );
+      var population_dataset;
+      populationChart.showLoading();
+      var option_populationChart;
+      function init_populationChart(province_name, city_name) {
+        set_option_populationChart(city_name);
+        if (province_name == city_name) {
+          // 全国疫情人口数据
+          if (province_name == "中国") {
+            $.when(read_nation_json).done(function() {
+              option_populationChart["dataset"][
+                "source"
+              ] = global_china_dataset;
+              option_populationChart["legend"]["selected"] = {
+                确诊: true,
+                疑似: true,
+                治愈: true,
+                死亡: true
+              };
+              populationChart.hideLoading();
+              populationChart.setOption(option_populationChart);
+            });
+          } else {
+            // 各省疫情人口数据
+            for (
+              let provinceIndex = 0;
+              provinceIndex < global_json.length;
+              provinceIndex++
+            ) {
+              if (
+                global_json[provinceIndex]["provinceShortName"] ===
+                province_name
+              ) {
+                populationChart.showLoading();
+                gen_population_dataset(global_json[provinceIndex]);
+                option_populationChart["dataset"][
+                  "source"
+                ] = population_dataset;
+                option_populationChart["legend"]["selected"] = {
+                  确诊: true,
+                  疑似: false,
+                  治愈: true,
+                  死亡: true
+                };
+                populationChart.hideLoading();
+                populationChart.setOption(option_populationChart);
+                break;
+              }
+            }
+          }
+        } else {
+          // 查看各市的数据
+          for (
+            let provinceIndex = 0;
+            provinceIndex < global_json.length;
+            provinceIndex++
+          ) {
+            if (
+              global_json[provinceIndex]["provinceShortName"] === province_name
+            ) {
+              for (
+                let cityIndex = 0;
+                cityIndex < global_json[provinceIndex]["cities"].length;
+                cityIndex++
+              ) {
+                if (
+                  global_json[provinceIndex]["cities"][cityIndex]["cityName"] ==
+                  city_name
+                ) {
+                  gen_population_dataset(
+                    global_json[provinceIndex]["cities"][cityIndex]
+                  );
+                  option_populationChart["dataset"][
+                    "source"
+                  ] = population_dataset;
+                  option_populationChart["legend"]["selected"] = {
+                    确诊: true,
+                    疑似: false,
+                    治愈: true,
+                    死亡: true
+                  };
+                  populationChart.hideLoading();
+                  populationChart.setOption(option_populationChart);
+                  break;
+                }
+              }
+              break;
+            }
+          }
+        }
+      }
+      function gen_population_dataset(object_dict) {
+        population_dataset = new Array();
+        population_dataset[0] = ["状态"].concat(global_date_list);
+        population_dataset[1] = ["确诊"].concat(object_dict["confirmedCount"]);
+        population_dataset[2] = ["疑似"].concat(object_dict["suspectedCount"]);
+        population_dataset[3] = ["治愈"].concat(object_dict["curedCount"]);
+        population_dataset[4] = ["死亡"].concat(object_dict["deadCount"]);
+      }
+      function set_option_populationChart(city_name) {
+        option_populationChart = {
+          title: {
+            text: city_name + " 疫情趋势图",
+            left: "center"
+          },
+          legend: {
+            show: true,
+            bottom: 10,
+            textStyle: {
+              fontSize: 15
+            }
+          },
+          tooltip: {
+            trigger: "axis",
+            showContent: true
+          },
+          dataset: {
+            // source: dataset_example
+            source: []
+          },
+          xAxis: {
+            type: "category",
+            name: "日期",
+            nameTextStyle: { fontSize: 16 },
+            axisLabel: { fontSize: 14 }
+          },
+          yAxis: {
+            min: 0,
+            name: "人数",
+            nameTextStyle: { fontSize: 16 },
+            axisLabel: { fontSize: 15 }
+          },
+          series: [
+            {
+              type: "line",
+              smooth: false,
+              seriesLayoutBy: "row",
+              symbolSize: 12,
+              color: "red",
+              lineStyle: {
+                width: 5
+              },
+              label: {
+                show: true,
+                fontSize: 15
+              }
+            },
+            {
+              type: "line",
+              smooth: false,
+              seriesLayoutBy: "row",
+              symbolSize: 8,
+              color: "#cc0099",
+              label: {
+                show: true,
+                fontSize: 15
+              }
+            },
+            {
+              type: "line",
+              smooth: false,
+              seriesLayoutBy: "row",
+              symbolSize: 8,
+              color: "green",
+              label: {
+                show: true,
+                fontSize: 15
+              }
+            },
+            {
+              type: "line",
+              smooth: false,
+              seriesLayoutBy: "row",
+              symbolSize: 8,
+              color: "black",
+              label: {
+                show: true,
+                fontSize: 15
+              }
+            }
+          ]
+        };
+      }
+    </script>
+    <script type="text/javascript" id="main_function">
+      init_chinaChart();
+    </script>
+  </body>
+</html>
