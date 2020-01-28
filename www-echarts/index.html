@@ -396,6 +396,17 @@
             position: ["55%", "30%"],
             formatter: "{b}：{c}（{d}%）"
           },
+          toolbox: {
+            show: true,
+            orient: "vertical",
+            left: "right",
+            top: "center",
+            feature: {
+              dataView: { readOnly: false },
+              restore: {},
+              saveAsImage: {}
+            }
+          },
           label: {
             formatter: "{b}: {d}%",
             fontSize: 14
@@ -564,6 +575,17 @@
           tooltip: {
             trigger: "axis",
             showContent: true
+          },
+          toolbox: {
+            show: true,
+            orient: "vertical",
+            left: "right",
+            top: "center",
+            feature: {
+              dataView: { readOnly: false },
+              restore: {},
+              saveAsImage: {}
+            }
           },
           dataset: {
             // source: dataset_example
