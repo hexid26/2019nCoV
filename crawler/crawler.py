@@ -98,12 +98,26 @@ def gen_cur_data(source):
   """
   global cur_data
   soup = BeautifulSoup(source, features="html.parser")
-  # # ! 2020-01-24
-  # * 全国整体数据
-  for p_item in soup.find_all('p'):
-    if 'class' in p_item.attrs:
-      if p_item.get('class')[0] == "confirmedNumber___3WrF5":
-        gen_area_data('全国', p_item.get_text())
+  # ! 2020-01-29 全国整体数据
+  for script_item in soup.body.find_all('script'):
+    if 'id' in script_item.attrs:
+      if script_item.get('id') == "getStatisticsService":
+        json_pattern = re.compile(r'getStatisticsService = (.*?)}catch',
+                                  re.DOTALL | re.IGNORECASE | re.MULTILINE)
+        res = re.findall(json_pattern, script_item.text)
+        nation_json_data = json.loads(res[0])
+        gen_area_data(
+            '全国', "确诊 " + str(nation_json_data["confirmedCount"]) + " 例，" + "疑似 " +
+            str(nation_json_data["suspectedCount"]) + " 例，" + "治愈" +
+            str(nation_json_data["curedCount"]) + " 例，" + "死亡 " +
+            str(nation_json_data["deadCount"]) + " 例，")
+        break
+  # ! 2020-01-24 全国整体数据
+  # for p_item in soup.find_all('p'):
+  #   if 'class' in p_item.attrs:
+  #     if p_item.get('class')[0] == "confirmedNumber___3WrF5":
+  #       gen_area_data('全国', p_item.get_text())
+  # ! 2020-01-24 区域数据
   for script_item in soup.body.find_all('script'):
     if 'id' in script_item.attrs:
       if script_item.get('id') == "getAreaStat":
@@ -263,7 +277,7 @@ def main():
     save_csv(file_path, cur_data)
     exit()
   update_data_collection()
-  __logger__.debug(data_collection)
+  # __logger__.debug(data_collection)
   save_csv(file_path, data_collection)
 
 
