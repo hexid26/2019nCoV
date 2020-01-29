@@ -103,41 +103,21 @@
         url: "history-areas.json",
         beforeSend: function() {},
         success: function(data) {
-          global_date_list = data[0].reverse();
+          global_china_dataset[0] = ["状态"].concat(data[0]["date"]);
+          global_china_dataset[1] = ["确诊"].concat(data[0]["confirmedCount"]);
+          global_china_dataset[2] = ["疑似"].concat(data[0]["suspectedCount"]);
+          global_china_dataset[3] = ["治愈"].concat(data[0]["curedCount"]);
+          global_china_dataset[4] = ["死亡"].concat(data[0]["deadCount"]);
+          for (let index = 1; index < global_china_dataset[0].length; index++) {
+            global_china_dataset[0][index] = global_china_dataset[0][index].slice(5);
+          }
+          global_date_list = data[1].reverse();
           global_date_list_end = global_date_list.length - 1;
-          global_json = data.slice(1);
+          global_json = data.slice(2);
           for (let index = 0; index < global_date_list.length; index++) {
             global_date_list[index] = global_date_list[index].slice(5);
           }
           load_done = true;
-        }
-      });
-      read_nation_json = $.ajax({
-        async: true,
-        global: true,
-        url: "history.csv",
-        success: function(read_data) {
-          data_csv_lines = read_data.split("\n");
-          for (let line_id = 0; line_id < 5; line_id++) {
-            global_china_dataset[line_id] = new Array();
-            data_csv_lines[line_id]
-              .split(",")
-              .forEach(function(data, index, arr) {
-                if (line_id == 0) {
-                  if (index == 1) {
-                    global_china_dataset[line_id].push(data);
-                  } else if (index > 1) {
-                    global_china_dataset[line_id].push(data.slice(5));
-                  }
-                } else {
-                  if (index == 1) {
-                    global_china_dataset[line_id].push(data);
-                  } else if (index > 1) {
-                    global_china_dataset[line_id].push(+data);
-                  }
-                }
-              });
-          }
         }
       });
       function sleep(ms) {
@@ -153,7 +133,7 @@
         //read_china_json请求完毕时执行
         $.when(read_china_json).done(function() {
           echarts.registerMap("china", geoJson);
-          $.when(read_china_json).done(async function() {
+          $.when(read_global_json).done(async function() {
             while (load_done == false) {
               await sleep(30);
             }
@@ -508,7 +488,7 @@
         if (province_name == city_name) {
           // 全国疫情人口数据
           if (province_name == "中国") {
-            $.when(read_nation_json).done(function() {
+            $.when(read_global_json).done(function() {
               option_populationChart["dataset"][
                 "source"
               ] = global_china_dataset;
