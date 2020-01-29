@@ -162,10 +162,8 @@ def merge_state_json_list():
       processed_json_data.append(new_province)
     # ! 补全缺失的现有 省市 数据
     for province_name in missing_province_list:
-      __logger__.debug(province_name)
       miss_province = list(
-          filter(lambda x: x["provinceShortName"] == province_name,
-                 state_json_list[state_json_index]))[0]
+          filter(lambda x: x["provinceShortName"] == province_name, processed_json_data))[0]
       miss_province["confirmedCount"].insert(0, 0)
       miss_province["suspectedCount"].insert(0, 0)
       miss_province["curedCount"].insert(0, 0)
