@@ -205,13 +205,29 @@ def save_csv():
   return
 
 
+def read_csv_file(file_path):
+  global processed_json_data
+  with open(file_path, 'r') as csvFile:
+    reader = csv.reader(csvFile)
+    all_china = {}
+    rows = [row for row in reader]
+    all_china["date"] = rows[0][2:]
+    all_china["confirmedCount"] = [int(x) for x in rows[1][2:]]
+    all_china["suspectedCount"] = [int(x) for x in rows[2][2:]]
+    all_china["curedCount"] = [int(x) for x in rows[3][2:]]
+    all_china["deadCount"] = [int(x) for x in rows[4][2:]]
+    processed_json_data.insert(0, all_china)
+  return
+
+
 def main():
   """Main function"""
   file_path = "history-areas.json"
   read_json_files()
   merge_state_json_list()
-  save_json(file_path)
   save_csv()
+  read_csv_file("history.csv")
+  save_json(file_path)
 
 
 if __name__ == '__main__':

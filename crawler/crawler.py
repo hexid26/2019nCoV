@@ -128,12 +128,12 @@ def gen_cur_data(source):
         json_file = open("/root/2019nCoV/json/" + cur_date + ".json", 'w', encoding='utf-8')
         json.dump(site_json_data, json_file, ensure_ascii=False)
         json_file.close()
-        for province in site_json_data:
-          gen_area_data(
-              province['provinceShortName'], "确诊 " + str(province['confirmedCount']) + " 例，" +
-              "疑似 " + str(province['suspectedCount']) + " 例，"
-              "治愈 " + str(province['curedCount']) + " 例，"
-              "死亡 " + str(province['deadCount']) + " 例，")
+  #       for province in site_json_data:
+  #         gen_area_data(
+  #             province['provinceShortName'], "确诊 " + str(province['confirmedCount']) + " 例，" +
+  #             "疑似 " + str(province['suspectedCount']) + " 例，"
+  #             "治愈 " + str(province['curedCount']) + " 例，"
+  #             "死亡 " + str(province['deadCount']) + " 例，")
   # # ! 2020-01-23
   # # * 全国整体数据
   # for p_item in soup.find_all('p'):
@@ -193,6 +193,8 @@ def read_csv_file(file_path):
         }
         area_item['name'] = rows[1 + 4 * area_index][0]
         area_item[rows[0][col_index]] = dict_item
+      # __logger__.debug(json.dumps(area_item, ensure_ascii=False))
+      # exit()
       data_collection.append(area_item)
   return
 
