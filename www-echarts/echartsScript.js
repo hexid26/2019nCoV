@@ -74,7 +74,7 @@ function init_chinaChart() {
       // * 开始画其它图
       init_provincePie("中国");
       init_populationChart("中国", "中国");
-      init_populationRatioChart();
+      init_populationRatioChart("中国","中国");
       option_chinaChart["series"][0]["data"] = province_dataset;
       chinaChart.hideLoading();
       chinaChart.setOption(option_chinaChart);
@@ -185,20 +185,22 @@ function set_option_chinaChart() {
   };
 }
 function chinaMapClick(params) {
-  if (params.value == null) {
+  if (params.value === null) {
     return;
   }
   let provinceName = params.data.name;
-  if (provinceName == "") {
+  if (provinceName === "") {
     provinceName = "中国";
   }
   init_provincePie(provinceName);
   init_populationChart(provinceName, provinceName);
+  init_populationRatioChart(provinceName,provinceName);
 }
 if (isMobile) {
   tap(chinaChart_bg, function(e) {
     init_provincePie("中国");
     init_populationChart("中国", "中国");
+    init_populationRatioChart("中国","中国");
   });
 } else {
   chinaChart_bg.addEventListener(
@@ -207,6 +209,7 @@ if (isMobile) {
       if (e) {
         init_provincePie("中国");
         init_populationChart("中国", "中国");
+        init_populationRatioChart("中国","中国");
       }
     },
     false
@@ -256,7 +259,7 @@ function init_provincePie(provinceName) {
   cur_provinceName = provinceName;
   set_option_provincePie(provinceName);
   provincePie.hideLoading();
-  if (provinceName == "中国") {
+  if (provinceName === "中国") {
     option_provincePie["series"][0]["data"] = province_dataset;
   } else {
     let data = genCityData(provinceName);
@@ -419,8 +422,10 @@ function provincePieClick(params) {
   let city_name = params.data.name;
   if (cur_provinceName == "中国") {
     init_populationChart(city_name, city_name);
+    init_populationRatioChart(city_name,city_name);
   } else {
     init_populationChart(cur_provinceName, city_name);
+    init_populationRatioChart(cur_provinceName,city_name);
   }
 }
 // *  点击背景的处理
@@ -428,6 +433,7 @@ if (isMobile) {
   tap(provincePie_bg, function(e) {
     init_provincePie(cur_provinceName);
     init_populationChart(cur_provinceName, cur_provinceName);
+    init_populationRatioChart(cur_provinceName,cur_provinceName);
   });
 } else {
   provincePie_bg.addEventListener(
@@ -436,6 +442,8 @@ if (isMobile) {
       if (e) {
         init_provincePie(cur_provinceName);
         init_populationChart(cur_provinceName, cur_provinceName);
+        init_populationRatioChart(cur_provinceName,cur_provinceName);
+
       }
     },
     false
@@ -540,34 +548,91 @@ function  set_populationRatioChart_dom(id){
 }
 
 //从 global_china_dataset 中计算出比例
+function init_populationRatioChart(province_name,city_name){
+  set_option_populationRatioChart(province_name);
+  let populationRatio_dataset;
+  if(province_name === city_name){
+    if(province_name ==="中国"){
+      // let populationRatio_dataset = JSON.parse(JSON.stringify(global_china_dataset));
+      populationRatio_dataset = JSON.parse(JSON.stringify(global_china_dataset));
+      for(let row = 1 ; row < global_china_dataset.length; row++){
+        for(let col =1 ; col <global_china_dataset[row].length; col++){
+          populationRatio_dataset[row][col] = Math.floor(
+              ((global_china_dataset[row][col+1] -
+                  global_china_dataset[row][col]) /
+                  global_china_dataset[row][col]) *
+              1000
+          ) / 1000;
+        }
+      }
+      option_populationRatioChart["dataset"]["source"] = populationRatio_dataset;
+      populationRatioChart.setOption(option_populationRatioChart);
 
-function init_populationRatioChart(){
-  set_option_populationRatioChart();
-  // let count =1;
-  let populationRatio_dataset = JSON.parse(JSON.stringify(global_china_dataset));
-  populationRatio_dataset[0].splice(1, 1);
-
-  for(let row = 1 ; row < global_china_dataset.length; row++){
-    for(let col =1 ; col <global_china_dataset[row].length; col++){
-      populationRatio_dataset[row][col] = Math.floor(
-          ((global_china_dataset[row][col+1] -
-              global_china_dataset[row][col]) /
-              global_china_dataset[row][col]) *
-          1000
-      ) / 1000;
+    }else{
+      // 各省的疫情增长/下降率
+      for (let provinceIndex = 0; provinceIndex < global_json.length; provinceIndex++){
+        if (global_json[provinceIndex]["provinceShortName"] === province_name){
+          gen_population_dataset(global_json[provinceIndex]);
+          populationRatio_dataset = JSON.parse(JSON.stringify(population_dataset));
+          for(let row = 1 ; row < population_dataset.length; row++){
+            for(let col =1 ; col <population_dataset[row].length; col++){
+              populationRatio_dataset[row][col] = Math.floor(
+                  ((population_dataset[row][col+1] -
+                      population_dataset[row][col]) /
+                      population_dataset[row][col]) *
+                  1000
+              ) / 1000;
+            }
+          }
+          option_populationRatioChart["dataset"]["source"] =populationRatio_dataset;
+          populationRatioChart.setOption(option_populationRatioChart);
+          break;
+        }
+      }
     }
-    populationRatio_dataset[row].splice(populationRatio_dataset[row].length-1,1);
+  }else{
+    // *  查看各市的数据
+    for (let provinceIndex = 0; provinceIndex < global_json.length; provinceIndex++){
+      if (global_json[provinceIndex]["provinceShortName"] === province_name){
+        for (let cityIndex = 0; cityIndex < global_json[provinceIndex]["cities"].length; cityIndex++){
+          if (global_json[provinceIndex]["cities"][cityIndex]["cityName"] === city_name){
+            gen_population_dataset(global_json[provinceIndex]["cities"][cityIndex]);
+            populationRatio_dataset = JSON.parse(JSON.stringify(population_dataset));
+            for(let row = 1 ; row < population_dataset.length; row++){
+              for(let col =1 ; col <population_dataset[row].length; col++){
+                populationRatio_dataset[row][col] = Math.floor(
+                    ((population_dataset[row][col+1] -
+                        population_dataset[row][col]) /
+                        population_dataset[row][col]) *
+                    1000
+                ) / 1000;
+              }
+            }
+            option_populationRatioChart["dataset"]["source"] =populationRatio_dataset;
+            populationRatioChart.setOption(option_populationRatioChart);
+            break;
+          }
+        }
+        break;
+      }
+    }
   }
-  option_populationRatioChart["dataset"]["source"] = populationRatio_dataset;
-  populationRatioChart.setOption(option_populationRatioChart);
+
   populationRatioChart.hideLoading();
 
 }
 
-function  set_option_populationRatioChart() {
+
+// 计算比例
+function genRatio(global_data) {
+
+
+}
+
+function  set_option_populationRatioChart(province_name,city_name) {
   option_populationRatioChart ={
     title: {
-      text: "增长/下降率"
+      text: province_name + " 疫情增长/下降率环比图"
     },
     legend: {
       show: true,
