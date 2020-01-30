@@ -18,8 +18,8 @@
 SCRIPT_NAME=$(basename ${0})      # 脚本名称
 BASEPATH=$(cd `dirname $0`; pwd)  # 脚本所在目录
 
-# file_list='index*.html testmap.html *.js china.json'
-file_list='*.html'
+file_list='index.html echartsScript.min.js'
+# file_list='test_query.html'
 # vpslist='139.180.130.111'
 vpslist='96.30.193.243 139.180.130.111 167.179.72.4'
 
