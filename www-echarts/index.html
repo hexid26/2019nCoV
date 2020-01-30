@@ -109,7 +109,9 @@
           global_china_dataset[3] = ["治愈"].concat(data[0]["curedCount"]);
           global_china_dataset[4] = ["死亡"].concat(data[0]["deadCount"]);
           for (let index = 1; index < global_china_dataset[0].length; index++) {
-            global_china_dataset[0][index] = global_china_dataset[0][index].slice(5);
+            global_china_dataset[0][index] = global_china_dataset[0][
+              index
+            ].slice(5);
           }
           global_date_list = data[1].reverse();
           global_date_list_end = global_date_list.length - 1;
@@ -683,5 +685,10 @@
       ></span
     >
     <!-- <div><a href="baidumap://map/place/search?query=医院&radius=1000&src=ios.baidu.openAPIdemo">所搜周边医院</a></div> -->
+    <div class="main-container" id="main" style="width:100% height: 1200px;">
+      <iframe src="test_query.html" width="100%" height="1200px" frameborder="0">
+        您的浏览器不支持iframe，请升级
+      </iframe>
+    </div>
   </body>
 </html>
