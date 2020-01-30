@@ -553,7 +553,7 @@ function init_populationRatioChart(province_name,city_name){
   let populationRatio_dataset;
   if(province_name === city_name){
     if(province_name ==="中国"){
-      // let populationRatio_dataset = JSON.parse(JSON.stringify(global_china_dataset));
+      //todo 函数有待提取优化
       populationRatio_dataset = JSON.parse(JSON.stringify(global_china_dataset));
       for(let row = 1 ; row < global_china_dataset.length; row++){
         for(let col =1 ; col <global_china_dataset[row].length; col++){
