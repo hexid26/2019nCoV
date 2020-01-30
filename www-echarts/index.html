@@ -358,13 +358,14 @@
 
       //获取全国的确诊人数
       function getChinaConfirmedConut() {
-        let count = 0;
-        for (let index = 0; index < province_dataset.length; index++) {
-          count += province_dataset[index]["value"];
-        }
-
+        let chinaConfirmedCount = 0;
+        // for (let index = 0; index < province_dataset.length; index++) {
+        //   count += province_dataset[index]["value"];
+        // }
+        let length = global_china_dataset[1].length-1;
+        chinaConfirmedCount = global_china_dataset[1][length];
         return {
-          count: count
+          count: chinaConfirmedCount
         };
       }
       function set_option_provincePie(provinceName) {
