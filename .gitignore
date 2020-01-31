@@ -1,2 +1,4 @@
 crawler/csv/*
 crawler/json/*
+*.xlsx
+*.xls
