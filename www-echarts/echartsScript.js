@@ -546,25 +546,15 @@ function  set_populationRatioChart_dom(id){
   populationRatioChart = echarts.init(document.getElementById(id));
   populationRatioChart.showLoading();
 }
-
+let populationRatio_dataset;
 //从 global_china_dataset 中计算出比例
 function init_populationRatioChart(province_name,city_name){
   set_option_populationRatioChart(province_name);
-  let populationRatio_dataset;
+  // let populationRatio_dataset;
   if(province_name === city_name){
     if(province_name ==="中国"){
-      //todo 函数有待提取优化
       populationRatio_dataset = JSON.parse(JSON.stringify(global_china_dataset));
-      for(let row = 1 ; row < global_china_dataset.length; row++){
-        for(let col =1 ; col <global_china_dataset[row].length; col++){
-          populationRatio_dataset[row][col] = Math.floor(
-              ((global_china_dataset[row][col+1] -
-                  global_china_dataset[row][col]) /
-                  global_china_dataset[row][col]) *
-              1000
-          ) / 1000;
-        }
-      }
+      genRatio(global_china_dataset);
       option_populationRatioChart["dataset"]["source"] = populationRatio_dataset;
       populationRatioChart.setOption(option_populationRatioChart);
 
@@ -574,16 +564,7 @@ function init_populationRatioChart(province_name,city_name){
         if (global_json[provinceIndex]["provinceShortName"] === province_name){
           gen_population_dataset(global_json[provinceIndex]);
           populationRatio_dataset = JSON.parse(JSON.stringify(population_dataset));
-          for(let row = 1 ; row < population_dataset.length; row++){
-            for(let col =1 ; col <population_dataset[row].length; col++){
-              populationRatio_dataset[row][col] = Math.floor(
-                  ((population_dataset[row][col+1] -
-                      population_dataset[row][col]) /
-                      population_dataset[row][col]) *
-                  1000
-              ) / 1000;
-            }
-          }
+          genRatio(population_dataset);
           option_populationRatioChart["dataset"]["source"] =populationRatio_dataset;
           populationRatioChart.setOption(option_populationRatioChart);
           break;
@@ -598,16 +579,7 @@ function init_populationRatioChart(province_name,city_name){
           if (global_json[provinceIndex]["cities"][cityIndex]["cityName"] === city_name){
             gen_population_dataset(global_json[provinceIndex]["cities"][cityIndex]);
             populationRatio_dataset = JSON.parse(JSON.stringify(population_dataset));
-            for(let row = 1 ; row < population_dataset.length; row++){
-              for(let col =1 ; col <population_dataset[row].length; col++){
-                populationRatio_dataset[row][col] = Math.floor(
-                    ((population_dataset[row][col+1] -
-                        population_dataset[row][col]) /
-                        population_dataset[row][col]) *
-                    1000
-                ) / 1000;
-              }
-            }
+            genRatio(population_dataset);
             option_populationRatioChart["dataset"]["source"] =populationRatio_dataset;
             populationRatioChart.setOption(option_populationRatioChart);
             break;
@@ -625,8 +597,16 @@ function init_populationRatioChart(province_name,city_name){
 
 // 计算比例
 function genRatio(global_data) {
-
-
+  for(let row = 1 ; row < global_data.length; row++){
+    for(let col =1 ; col <global_data[row].length; col++){
+      populationRatio_dataset[row][col] = Math.floor(
+          ((global_data[row][col+1] -
+              global_data[row][col]) /
+              global_data[row][col]) *
+          1000
+      ) / 1000;
+    }
+  }
 }
 
 function  set_option_populationRatioChart(province_name,city_name) {
