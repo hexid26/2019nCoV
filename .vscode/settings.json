@@ -1,4 +1,8 @@
 {
   "liveServer.settings.root": "/www-echarts/",
+<<<<<<< HEAD
   "python.pythonPath": "/Users/haixiang/.pyenv/versions/3.7.0/bin/python"
+=======
+  "liveServer.settings.port": 5501
+>>>>>>> www-echarts
 }
