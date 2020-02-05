@@ -23,13 +23,13 @@ tput sgr0
 # 1 红 2 绿 3 黄 4 蓝 5 粉 6 青 7 白 8 灰 9 橙 10 墨绿
 
 file='history.log'
-vpslist='96.30.193.243 139.180.130.111 167.179.72.4'
+vpslist='96.30.193.243 139.180.130.111 167.179.72.4 60.205.218.88'
 
 scp root@96.30.193.243:/root/2019nCoV/history.csv ${BASEPATH}/csv/data_us.csv
-scp root@167.179.72.4:/root/2019nCoV/history.csv ${BASEPATH}/csv/data_jp.csv
+# scp root@167.179.72.4:/root/2019nCoV/history.csv ${BASEPATH}/csv/data_jp.csv
 scp root@139.180.130.111:/root/2019nCoV/history.csv ${BASEPATH}/csv/data_sgp.csv
-scp root@139.180.130.111:/root/2019nCoV/json/* ${BASEPATH}/json/
-scp root@139.180.130.111:/root/2019nCoV/history-areas* ${BASEPATH}/
+scp root@60.205.218.88:/root/2019nCoV/json/* ${BASEPATH}/json/
+scp root@60.205.218.88:/root/2019nCoV/history-areas* ${BASEPATH}/
 
 tput setaf 2
 echo "# ${SCRIPT_NAME} Done"

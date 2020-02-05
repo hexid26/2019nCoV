@@ -265,6 +265,29 @@ def update_data_collection():
   return
 
 
+def fix_increment(source):
+  global data_collection
+  soup = BeautifulSoup(source, features="html.parser")
+  # ! 2020-01-29 全国整体数据
+  for script_item in soup.body.find_all('script'):
+    if 'id' in script_item.attrs:
+      if script_item.get('id') == "getStatisticsService":
+        json_pattern = re.compile(r'getStatisticsService = (.*?)}catch',
+                                  re.DOTALL | re.IGNORECASE | re.MULTILINE)
+        res = re.findall(json_pattern, script_item.text)
+        nation_json_data = json.loads(res[0])
+        yesterday = sorted(data_collection[0].keys())[-3]
+        data_collection[0][yesterday][
+            "确诊"] = nation_json_data["confirmedCount"] - nation_json_data["confirmedIncr"]
+        # data_collection[0][yesterday][
+        #     "疑似"] = nation_json_data["suspectedCount"] - nation_json_data["suspectedIncr"]
+        data_collection[0][yesterday][
+            "治愈"] = nation_json_data["curedCount"] - nation_json_data["curedIncr"]
+        data_collection[0][yesterday][
+            "死亡"] = nation_json_data["deadCount"] - nation_json_data["deadIncr"]
+        break
+
+
 def main():
   """Main function"""
   global url
@@ -279,7 +302,7 @@ def main():
     save_csv(file_path, cur_data)
     exit()
   update_data_collection()
-  # __logger__.debug(data_collection)
+  fix_increment(url_source)
   save_csv(file_path, data_collection)
 
 

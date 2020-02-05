@@ -10,7 +10,8 @@ import re
 import xlrd
 from xlrd import xldate_as_tuple
 import xlwt
-import datetime
+from datetime import datetime
+from datetime import time as dtime
 import time
 
 # def set_argparse():
@@ -131,7 +132,15 @@ def get_sogou_data(url):
   request_res = requests.get(url)
   request_res.encoding = "utf-8"
   temp_json = json.loads(request_res.text)
-  t_type_dict = {"客车": "客车大巴", "公交": "公交车", "航班": "飞机", "火车": "火车", "汽车": "客车大巴", "大巴": "客车大巴"}
+  t_type_dict = {
+      "客车": "客车大巴",
+      "公交": "公交车",
+      "航班": "飞机",
+      "火车": "火车",
+      "汽车": "客车大巴",
+      "大巴": "客车大巴",
+      "其他": "其它公共场所"
+  }
   for item in temp_json:
     item["id"] = ""
     item["t_date"] = item.pop("trafficTime")
@@ -196,19 +205,24 @@ def read_xlsx_file(xlsx_file_name, sheet_name, skip_rows):
         item[global_table_head[col_idx]] = "CETC"
         continue
       elif col_idx == 1:
-        date_items = date_regex.findall(cur_sheet.cell_value(row_idx, col_idx))
-        if len(date_items) != 0:
-          item[global_table_head[col_idx]] = "%d-%02d-%02d" % (
-              int(date_items[0][0]),
-              int(date_items[0][1]),
-              int(date_items[0][2]),
-          )
+        if cur_sheet.cell(row_idx, col_idx).ctype == 3:
+          date = datetime(
+              *xldate_as_tuple(cur_sheet.cell_value(row_idx, col_idx), workbook.datemode))
+          item[global_table_head[col_idx]] = date.strftime("%Y-%m-%d")
         else:
-          item[global_table_head[col_idx]] = cur_sheet.cell_value(row_idx, col_idx)
+          date_items = date_regex.findall(cur_sheet.cell_value(row_idx, col_idx))
+          if len(date_items) != 0:
+            item[global_table_head[col_idx]] = "%d-%02d-%02d" % (
+                int(date_items[0][0]),
+                int(date_items[0][1]),
+                int(date_items[0][2]),
+            )
+          else:
+            item[global_table_head[col_idx]] = cur_sheet.cell_value(row_idx, col_idx)
         continue
       elif col_idx == 2 or col_idx == 3:
         if cur_sheet.cell(row_idx, col_idx).ctype == 3:
-          date = time(
+          date = dtime(
               *xldate_as_tuple(cur_sheet.cell_value(row_idx, col_idx), workbook.datemode)[3:])
           item[global_table_head[col_idx]] = date.strftime('%H:%M')
         else:
@@ -361,36 +375,46 @@ def main():
   # # * 无糖数据
   nosugar_json_data = get_nosugar_data(nosugar_url)
   global_item_list += nosugar_json_data
-  __logger__.debug(len(global_item_list))
+  __logger__.debug("无糖：%d" % len(global_item_list))
 
   # # * 航班管家|高铁管家
   hbgj_gtgj_json_data = get_hbgj_gtgj_data(hbgj_gtgj_url)
   global_item_list += hbgj_gtgj_json_data
-  __logger__.debug(len(global_item_list))
+  __logger__.debug("航班管家：%d" % len(hbgj_gtgj_json_data))
 
   # * 搜狗同乘
   sogou_json_data = get_sogou_data(sogou_url)
   global_item_list += sogou_json_data
-  __logger__.debug(len(global_item_list))
+  __logger__.debug("搜狗：%d" % len(sogou_json_data))
 
   # * CETC 人工
-  cetc_json_data = read_xlsx_file("同行交通工具.xlsx", "2020-01-29", 5)
+  cetc_json_data = []
+  tmp_cetc_json_data = read_xlsx_file("同行交通工具.xlsx", "2020-01-29", 5)
+  cetc_json_data += tmp_cetc_json_data
+  tmp_cetc_json_data = read_xlsx_file("同行交通工具.xlsx", "2020-01-30", 1)
+  cetc_json_data += tmp_cetc_json_data
+  tmp_cetc_json_data = read_xlsx_file("同行交通工具.xlsx", "2020-01-31", 5)
+  cetc_json_data += tmp_cetc_json_data
+  tmp_cetc_json_data = read_xlsx_file("同行交通工具.xlsx", "2020-02-01", 5)
+  cetc_json_data += tmp_cetc_json_data
+  tmp_cetc_json_data = read_xlsx_file("同行交通工具.xlsx", "2020-02-02", 5)
+  cetc_json_data += tmp_cetc_json_data
+  tmp_cetc_json_data = read_xlsx_file("同行交通工具.xlsx", "2020-02-03", 5)
+  cetc_json_data += tmp_cetc_json_data
+  tmp_cetc_json_data = read_xlsx_file("同行交通工具.xlsx", "2020-02-04", 5)
+  cetc_json_data += tmp_cetc_json_data
+  tmp_cetc_json_data = read_xlsx_file("history/Addition1.xlsx", "sheet", 1)
+  tmp_cetc_json_data = read_xlsx_file("history/Addition2.xlsx", "Sheet1", 1)
+  cetc_json_data += tmp_cetc_json_data
   global_item_list += cetc_json_data
-  cetc_json_data = read_xlsx_file("同行交通工具.xlsx", "2020-01-30", 1)
-  global_item_list += cetc_json_data
-  cetc_json_data = read_xlsx_file("同行交通工具.xlsx", "2020-01-31", 5)
-  global_item_list += cetc_json_data
-  cetc_json_data = read_xlsx_file("同行交通工具.xlsx", "2020-01-31", 5)
-  global_item_list += cetc_json_data
-  cetc_json_data = read_xlsx_file("history/Addition1.xlsx", "sheet", 1)
-  global_item_list += cetc_json_data
-  __logger__.debug(len(global_item_list))
+  __logger__.debug("CETC：%d" % len(cetc_json_data))
+  __logger__.debug("合计：%d" % len(global_item_list))
 
   # statistical("无糖", nosugar_json_data)
   # statistical("航班管家", hbgj_gtgj_json_data)
   # statistical("搜狗同乘", sogou_json_data)
   # statistical("CETC", cetc_json_data)
-  save_json("history/tx_"+ cur_date +"_all.json")
+  save_json("history/tx_" + cur_date + "_all.json")
   save_json_to_xlsx_file("history/tx" + cur_date + "_all.xls", global_item_list)
   merge_jsons()
   # print_json("all", global_item_list)
