@@ -23,6 +23,9 @@ import time
 nosugar_url = "https://2019ncov.nosugartech.com/data.json"
 hbgj_gtgj_url = "https://jp.rsscc.com/gateway/dynamic/tool?client=vuetrainweb&source=vuetrainweb&platform=web&cver=7.0&dver=0&iver=5.32&format=json&uid=H5GTkvdmTxjKAfz7pRuxtjWc_C&imei=H5GTkvdmTxjKAfz7pRuxtjWc_C&uuid=H5GTkvdmTxjKAfz7pRuxtjWc_C&p=vuetrainweb%2Cunknown%2Cvuetrainweb%2C7.0%2Cweb&appinfo=vuetrainweb%2Cunknown%2Cvuetrainweb%2C7.0%2Cweb&systemtime=1580414561468&pid=315015&sid=3DF937FB"
 sogou_url = "https://hhyfeed.sogoucdn.com/js/common/epidemic-search/main_2020013104.js"
+toutiao_url = "https://i-lq.snssdk.com/toutiao/virus/all"
+baidu_url = "https://cityservice-hb.cdn.bcebos.com/amis/pneumonia/travel_data.json?sign=h593cnoRAk%2FxsoB05tmEuq80IQ4VGaM7PWG3xzhm8sJ5y7AKfxN7aVqus%2FTUFOzHRRWm1gw79BepM%2BKOtnG3Qb5ho9yGizoQJV93F9%2Fc519Q0Xb4RRfWTP6mHDfQRGUPOf0YEF95F%2FRL2LNhCLSzrW7vqx5P1AK95JievVQpHoY%3D"
+ali_url = "https://m.sm.cn/api/rest?format=json&method=Huoshenshan.trailSearch&page=1&size=10000&position=&type=0&no=&datefrom=2020-1-1&dateto=2020-2-5&"
 
 global_item_list = []
 global_table_head = [
@@ -160,6 +163,104 @@ def get_sogou_data(url):
   return temp_json
 
 
+def get_toutiao_data(url):
+  global global_place_type
+  request_res = requests.get(url)
+  request_res.encoding = "utf-8"
+  temp_json = json.loads(request_res.text)
+  temp_json = temp_json["data"]["patient_info_list"]
+  t_type_dict = {
+      "场所": "其它公共场所",
+      "出租车": "出租车",
+      "火车": "火车",
+      "公交车": "公交车",
+      "飞机": "飞机",
+      "地铁": "地铁",
+      "长途车": "客车大巴",
+      "轮渡": "轮船",
+      "汽车": "客车大巴",
+      "轻轨": "地铁",
+      "邮轮": "轮船",
+  }
+  for item in temp_json:
+    item["id"] = ""
+    item["t_date"] = datetime.fromtimestamp(item.pop("travel_datetime")).strftime("%Y-%m-%d")
+    item["t_start"] = item.pop("news_gid")
+    item["t_end"] = ""
+    item["t_type"] = t_type_dict[item.pop("travel_method")]
+    item["t_no"] = item.pop("travel_number")
+    item["t_memo"] = item.pop("patient_info")
+    item["t_no_sub"] = " ".join(item.pop("query_keywords"))
+    item["t_pos_start"] = item.pop("location_start")
+    item["t_pos_end"] = item.pop("location_end")
+    item["source"] = item.pop("news_url")
+    item["who"] = item.pop("news_source")
+    item["verified"] = "1"
+    item["t_created"] = datetime.fromtimestamp(item.pop("updated_datetime")).strftime("%Y-%m-%d")
+  return temp_json
+
+
+def get_baidu_data(url):
+  """get_nosugar_data get source of url
+  
+  Arguments:
+      url {str} -- url address
+  """
+  global global_place_type
+  request_res = requests.get(url)
+  request_res.encoding = "utf-8"
+  temp_json = json.loads(request_res.text)
+  temp_json = temp_json["data"]
+  for item in temp_json:
+    item["id"] = item.pop("id")
+    item["t_date"] = item.pop("date")
+    item["t_start"] = datetime.fromtimestamp(item.pop("start_time")).strftime("%Y-%m-%d %H:%M:%S")
+    item["t_end"] = datetime.fromtimestamp(item.pop("end_time")).strftime("%Y-%m-%d %H:%M:%S")
+    item["t_type"] = global_place_type[item.pop("type") - 1]
+    item["t_no"] = item.pop("no")
+    item["t_memo"] = item.pop("memo")
+    item["t_no_sub"] = item.pop("no_sub")
+    item["t_pos_start"] = item.pop("start_pos")
+    item["t_pos_end"] = item.pop("end_pos")
+    item["source"] = item.pop("source")
+    item["who"] = item.pop("from")
+    item["verified"] = "1"
+    item["t_created"] = datetime.fromtimestamp(
+        item.pop("create_time")).strftime("%Y-%m-%d %H:%M:%S")
+    item.pop("update_time")
+  return temp_json
+
+
+def get_ali_data(url):
+  """get_nosugar_data get source of url
+  
+  Arguments:
+      url {str} -- url address
+  """
+  global global_place_type
+  request_res = requests.get(url)
+  request_res.encoding = "utf-8"
+  temp_json = json.loads(request_res.text)
+  temp_json = temp_json["data"]
+  for item in temp_json:
+    item["id"] = ""
+    item["t_date"] = item.pop("date")
+    item["t_start"] = datetime.fromtimestamp(int(item.pop("start_time"))).strftime("%Y-%m-%d %H:%M:%S")
+    item["t_end"] = datetime.fromtimestamp(int(
+        item.pop("end_time"))).strftime("%Y-%m-%d %H:%M:%S")
+    item["t_type"] = global_place_type[int(item.pop("type")) - 1]
+    item["t_no"] = item.pop("no")
+    item["t_memo"] = item.pop("intro")
+    item["t_no_sub"] = item.pop("no_sub")
+    item["t_pos_start"] = item.pop("start_station")
+    item["t_pos_end"] = item.pop("end_station")
+    item["source"] = item.pop("source")
+    item["who"] = item.pop("site")
+    item["verified"] = item.pop("verified")
+    item["t_created"] = ""
+  return temp_json
+
+
 def get_temp_data(url):
   """get_nosugar_data get source of url
   
@@ -184,8 +285,10 @@ def get_temp_data(url):
     item["source"] = item.pop("")
     item["who"] = item.pop("")
     item["verified"] = item.pop("")
+    item["t_created"] = item.pop("")
   __logger__.error("This function is a template")
   exit()
+  return temp_json
 
 
 def read_xlsx_file(xlsx_file_name, sheet_name, skip_rows):
@@ -277,7 +380,8 @@ def save_json(file_path):
 def is_equal(object_1, object_2):
   score_1 = 0
   score_2 = 0
-  if object_1["t_type"] == object_2["t_type"] and object_1["t_no"] == object_2["t_no"]:
+  if object_1["t_type"] == object_2["t_type"] and object_1["t_no"] == object_2["t_no"] and object_1[
+      "t_no_sub"] == object_2["t_no_sub"]:
     for key in object_1:
       if object_1[key] != "":
         score_1 = score_1 + 1
@@ -368,6 +472,8 @@ def main():
   global nosugar_url
   global hbgj_gtgj_url
   global sogou_url
+  global toutiao_url
+  global baidu_url
   global global_item_list
   global cur_date
   global_item_list = []
@@ -386,6 +492,21 @@ def main():
   sogou_json_data = get_sogou_data(sogou_url)
   global_item_list += sogou_json_data
   __logger__.debug("搜狗：%d" % len(sogou_json_data))
+
+  # * 头条同乘
+  toutiao_json_data = get_toutiao_data(toutiao_url)
+  global_item_list += toutiao_json_data
+  __logger__.debug("头条：%d" % len(toutiao_json_data))
+
+  # * 百度同乘
+  baidu_json_data = get_baidu_data(baidu_url)
+  global_item_list += baidu_json_data
+  __logger__.debug("百度：%d" % len(baidu_json_data))
+
+  # * 阿里同乘
+  ali_json_data = get_ali_data(ali_url)
+  global_item_list += ali_json_data
+  __logger__.debug("阿里：%d" % len(ali_json_data))
 
   # * CETC 人工
   cetc_json_data = []
