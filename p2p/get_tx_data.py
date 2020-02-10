@@ -13,6 +13,7 @@ import xlwt
 from datetime import datetime
 from datetime import time as dtime
 import time
+from collections import Counter
 
 # def set_argparse():
 #   """Set the args&argv for command line mode"""
@@ -545,6 +546,9 @@ def main():
   save_json_to_xlsx_file("history/tx_data_min.xls", global_item_list)
   __logger__.info("We got %d rules. Available check sum = %d" %
                   (len(global_item_list), len(set(get_available_list(global_item_list)))))
+  type_list = list(map(lambda k: k["t_type"], global_item_list))
+  type_cnt = Counter(type_list)
+  __logger__.info(type_cnt)
   # read_xlsx_file("")
 
 

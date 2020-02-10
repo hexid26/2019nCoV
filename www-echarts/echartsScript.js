@@ -18,20 +18,20 @@ read_china_json = $.ajax({
 read_global_json = $.ajax({
   async: true,
   global: true,
-  url: "history-areas.json",
+  url: "history-areas-all.json",
   beforeSend: function() {},
   success: function(data) {
-    global_china_dataset[0] = ["状态"].concat(data[0]["date"]);
-    global_china_dataset[1] = ["确诊"].concat(data[0]["confirmedCount"]);
-    global_china_dataset[2] = ["疑似"].concat(data[0]["suspectedCount"]);
-    global_china_dataset[3] = ["治愈"].concat(data[0]["curedCount"]);
-    global_china_dataset[4] = ["死亡"].concat(data[0]["deadCount"]);
+    global_china_dataset[0] = ["状态"].concat(data[2]["date"]);
+    global_china_dataset[1] = ["确诊"].concat(data[2]["confirmedCount"]);
+    global_china_dataset[2] = ["疑似"].concat(data[2]["suspectedCount"]);
+    global_china_dataset[3] = ["治愈"].concat(data[2]["curedCount"]);
+    global_china_dataset[4] = ["死亡"].concat(data[2]["deadCount"]);
     for (let index = 1; index < global_china_dataset[0].length; index++) {
       global_china_dataset[0][index] = global_china_dataset[0][index].slice(5);
     }
-    global_date_list = data[1].reverse();
+    global_date_list = data[3].reverse();
     global_date_list_end = global_date_list.length - 1;
-    global_json = data.slice(2);
+    global_json = data.slice(4);
     for (let index = 0; index < global_date_list.length; index++) {
       global_date_list[index] = global_date_list[index].slice(5);
     }
@@ -621,7 +621,7 @@ function set_option_populationChart(city_name) {
         type: "line",
         smooth: false,
         seriesLayoutBy: "row",
-        symbolSize: 12,
+        symbolSize: 8,
         symbol: "circle",
         zlevel: 2,
         z: 4,
@@ -633,7 +633,7 @@ function set_option_populationChart(city_name) {
           }
         },
         lineStyle: {
-          width: 4
+          width: 3
         }
       },
       {
@@ -802,7 +802,7 @@ function set_option_populationRatioChart(city_name) {
         type: "line",
         smooth: true,
         seriesLayoutBy: "row",
-        symbolSize: 8,
+        symbolSize: 6,
         symbol: "circle",
         zlevel: 2,
         z: 4,
@@ -814,7 +814,7 @@ function set_option_populationRatioChart(city_name) {
           }
         },
         lineStyle: {
-          width: 4
+          width: 2
         }
       },
       {

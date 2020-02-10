@@ -19,8 +19,8 @@ SCRIPT_NAME=$(basename ${0})      # 脚本名称
 BASEPATH=$(cd `dirname $0`; pwd)  # 脚本所在目录
 
 file_list='crawler.py clear.sh gen_jpg.py merge_json.py'
-# vpslist='139.180.130.111'
-vpslist='96.30.193.243 139.180.130.111 167.179.72.4'
+vpslist='60.205.218.88'
+# vpslist='96.30.193.243 139.180.130.111 167.179.72.4'
 
 for vps in $vpslist; do
   tput setaf 1

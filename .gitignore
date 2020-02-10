@@ -1,4 +1,8 @@
 crawler/csv/*
 crawler/json/*
-*.xlsx
+p2p/*.xlsx
+crawler/*.xlsx
 *.xls
+p2p/history/*2020*.json
+www-echarts/history*.json
+www-echarts/*.csv

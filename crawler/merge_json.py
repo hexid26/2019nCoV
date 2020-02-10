@@ -6,6 +6,9 @@ import logging
 import time
 import os
 import json, csv
+import xlwt, xlrd
+from datetime import datetime
+from xlrd import xldate_as_tuple
 
 
 def get_logger(logname):
@@ -60,8 +63,7 @@ def read_json_files():
 def init_processed_json_data():
   global processed_json_data
   global state_json_list
-  state_json = state_json_list[0]
-  processed_json_data = state_json
+  processed_json_data = state_json_list[0]
   # __logger__.debug(processed_json_data)
   for province in processed_json_data:
     province["confirmedCount"] = [province["confirmedCount"]]
@@ -82,11 +84,12 @@ def merge_cities(processed_json_cities, add_cities, day_index):
     city_list = list(filter(lambda x: x["cityName"] in city["cityName"], processed_json_cities))
     if len(city_list) == 0:
       # ! 在现有数据之上新增 城市 数据
-      city["confirmedCount"] = [city["confirmedCount"]] + [0] * day_index
-      city["suspectedCount"] = [city["suspectedCount"]] + [0] * day_index
-      city["curedCount"] = [city["curedCount"]] + [0] * day_index
-      city["deadCount"] = [city["deadCount"]] + [0] * day_index
-      processed_json_cities.append(city)
+      # city["confirmedCount"] = [city["confirmedCount"]] + [0] * day_index
+      # city["suspectedCount"] = [city["suspectedCount"]] + [0] * day_index
+      # city["curedCount"] = [city["curedCount"]] + [0] * day_index
+      # city["deadCount"] = [city["deadCount"]] + [0] * day_index
+      # processed_json_cities.append(city)
+      pass
     else:
       # ! 刷新现有 城市 数据
       processed_json_data_cur_city = city_list[0]
@@ -121,6 +124,7 @@ def sort_json():
 def merge_state_json_list():
   global processed_json_data
   global state_json_list
+  global date_list
   init_processed_json_data()
   # days_sum = len(date_list)
   for state_json_index in range(1, len(date_list)):
@@ -146,20 +150,20 @@ def merge_state_json_list():
       processed_json_data_cur_province["deadCount"].insert(0, province["deadCount"])
       merge_cities(processed_json_data_cur_province["cities"], province["cities"], state_json_index)
     # ! 在现有数据之上新增 省市 数据
-    for province_name in new_province_list:
-      new_province = list(
-          filter(lambda x: x["provinceShortName"] == province_name,
-                 state_json_list[state_json_index]))[0]
-      new_province["confirmedCount"] = [new_province["confirmedCount"]] + [0] * state_json_index
-      new_province["suspectedCount"] = [new_province["suspectedCount"]] + [0] * state_json_index
-      new_province["curedCount"] = [new_province["curedCount"]] + [0] * state_json_index
-      new_province["deadCount"] = [new_province["deadCount"]] + [0] * state_json_index
-      for city in new_province["cities"]:
-        city["confirmedCount"] = [city["confirmedCount"]] + [0] * state_json_index
-        city["suspectedCount"] = [city["suspectedCount"]] + [0] * state_json_index
-        city["curedCount"] = [city["curedCount"]] + [0] * state_json_index
-        city["deadCount"] = [city["deadCount"]] + [0] * state_json_index
-      processed_json_data.append(new_province)
+    # for province_name in new_province_list:
+    #   new_province = list(
+    #       filter(lambda x: x["provinceShortName"] == province_name,
+    #              state_json_list[state_json_index]))[0]
+    #   new_province["confirmedCount"] = [new_province["confirmedCount"]] + [0] * state_json_index
+    #   new_province["suspectedCount"] = [new_province["suspectedCount"]] + [0] * state_json_index
+    #   new_province["curedCount"] = [new_province["curedCount"]] + [0] * state_json_index
+    #   new_province["deadCount"] = [new_province["deadCount"]] + [0] * state_json_index
+    #   for city in new_province["cities"]:
+    #     city["confirmedCount"] = [city["confirmedCount"]] + [0] * state_json_index
+    #     city["suspectedCount"] = [city["suspectedCount"]] + [0] * state_json_index
+    #     city["curedCount"] = [city["curedCount"]] + [0] * state_json_index
+    #     city["deadCount"] = [city["deadCount"]] + [0] * state_json_index
+    #   processed_json_data.append(new_province)
     # ! 补全缺失的现有 省市 数据
     for province_name in missing_province_list:
       miss_province = list(
@@ -205,6 +209,24 @@ def save_csv():
   return
 
 
+def compress_state_json():
+  global processed_json_data
+  for p_idx in range(4, len(processed_json_data)):
+    processed_json_data[p_idx]["confirmedCount"] = processed_json_data[p_idx]["confirmedCount"][-1:]
+    processed_json_data[p_idx]["suspectedCount"] = processed_json_data[p_idx]["suspectedCount"][-1:]
+    processed_json_data[p_idx]["curedCount"] = processed_json_data[p_idx]["curedCount"][-1:]
+    processed_json_data[p_idx]["deadCount"] = processed_json_data[p_idx]["deadCount"][-1:]
+    for c_idx in range(0, len(processed_json_data[p_idx]["cities"])):
+      processed_json_data[p_idx]["cities"][c_idx]["confirmedCount"] = processed_json_data[p_idx][
+          "cities"][c_idx]["confirmedCount"][-1:]
+      processed_json_data[p_idx]["cities"][c_idx]["suspectedCount"] = processed_json_data[p_idx][
+          "cities"][c_idx]["suspectedCount"][-1:]
+      processed_json_data[p_idx]["cities"][c_idx]["curedCount"] = processed_json_data[p_idx][
+          "cities"][c_idx]["curedCount"][-1:]
+      processed_json_data[p_idx]["cities"][c_idx]["deadCount"] = processed_json_data[p_idx][
+          "cities"][c_idx]["deadCount"][-1:]
+
+
 def read_csv_file(file_path):
   global processed_json_data
   with open(file_path, 'r') as csvFile:
@@ -220,13 +242,52 @@ def read_csv_file(file_path):
   return
 
 
+def read_xlsx_file(file_path, sheet_name):
+  json_from_xlsx = {}
+  workbook = xlrd.open_workbook(file_path)
+  cur_sheet = workbook.sheet_by_name(sheet_name)
+  ncols = cur_sheet.ncols
+  date_list = []
+  for col_idx in range(1, ncols):
+    date_list.append(
+        datetime(*xldate_as_tuple(cur_sheet.cell_value(0, col_idx), workbook.datemode)).strftime(
+            "%Y-%m-%d"))
+  json_from_xlsx["date"] = date_list
+  row_idx = 1
+  for category_name in ["confirmedIncr", "suspectedIncr", "curedIncr", "deadIncr"]:
+    data_list = []
+    for col_idx in range(1, ncols):
+      data_list.append(int(cur_sheet.cell_value(row_idx, col_idx)))
+    json_from_xlsx[category_name] = data_list
+    row_idx += 1
+  return json_from_xlsx
+
+
+def load_json_file(file_path):
+  with open(file_path, 'r') as json_file:
+    json_data = json.load(json_file)
+  return json_data
+
+
 def main():
   """Main function"""
+  global processed_json_data
   file_path = "history-areas.json"
   read_json_files()
   merge_state_json_list()
+  for idx in range(2, len(processed_json_data)):
+    if processed_json_data[idx]["provinceName"] == "待明确地区":
+      processed_json_data[idx]["provinceName"] = "其他"
+    if processed_json_data[idx]["provinceShortName"] == "待明确地区":
+      processed_json_data[idx]["provinceShortName"] = "其他"
   save_csv()
   read_csv_file("history.csv")
+  nation_state_json = load_json_file("nation_state.json")
+  incr_json = read_xlsx_file("WJW数据.xlsx", "增量")
+  processed_json_data.insert(0, incr_json)
+  processed_json_data.insert(0, nation_state_json)
+  save_json("history-areas-all.json")
+  compress_state_json()
   save_json(file_path)
 
 

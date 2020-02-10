@@ -193,8 +193,6 @@ def read_csv_file(file_path):
         }
         area_item['name'] = rows[1 + 4 * area_index][0]
         area_item[rows[0][col_index]] = dict_item
-      # __logger__.debug(json.dumps(area_item, ensure_ascii=False))
-      # exit()
       data_collection.append(area_item)
   return
 
@@ -265,10 +263,16 @@ def update_data_collection():
   return
 
 
-def fix_increment(source):
-  global data_collection
+def save_json(file_path, json_object):
+  with open(file_path, "w") as json_file:
+    json.dump(json_object, json_file, ensure_ascii=False)
+  json_file.close()
+
+
+def gen_nation_state(source):
   soup = BeautifulSoup(source, features="html.parser")
-  # ! 2020-01-29 全国整体数据
+  # ! 2020-02-07 全国整体数据
+  nation_state = {}
   for script_item in soup.body.find_all('script'):
     if 'id' in script_item.attrs:
       if script_item.get('id') == "getStatisticsService":
@@ -276,15 +280,21 @@ def fix_increment(source):
                                   re.DOTALL | re.IGNORECASE | re.MULTILINE)
         res = re.findall(json_pattern, script_item.text)
         nation_json_data = json.loads(res[0])
-        yesterday = sorted(data_collection[0].keys())[-3]
-        data_collection[0][yesterday][
-            "确诊"] = nation_json_data["confirmedCount"] - nation_json_data["confirmedIncr"]
-        # data_collection[0][yesterday][
-        #     "疑似"] = nation_json_data["suspectedCount"] - nation_json_data["suspectedIncr"]
-        data_collection[0][yesterday][
-            "治愈"] = nation_json_data["curedCount"] - nation_json_data["curedIncr"]
-        data_collection[0][yesterday][
-            "死亡"] = nation_json_data["deadCount"] - nation_json_data["deadIncr"]
+        nation_state["confirmed"] = nation_json_data["confirmedCount"]
+        nation_state["suspected"] = nation_json_data["suspectedCount"]
+        nation_state["cured"] = nation_json_data["curedCount"]
+        nation_state["dead"] = nation_json_data["deadCount"]
+        try:
+          nation_state["confirmedIncr"] = nation_json_data["confirmedIncr"]
+          nation_state["suspectedIncr"] = nation_json_data["suspectedIncr"]
+          nation_state["curedIncr"] = nation_json_data["curedIncr"]
+          nation_state["deadIncr"] = nation_json_data["deadIncr"]
+        except KeyError:
+          nation_state["confirmedIncr"] = -1
+          nation_state["suspectedIncr"] = -1
+          nation_state["curedIncr"] = -1
+          nation_state["deadIncr"] = -1
+        save_json("nation_state.json", nation_state)
         break
 
 
@@ -302,7 +312,7 @@ def main():
     save_csv(file_path, cur_data)
     exit()
   update_data_collection()
-  fix_increment(url_source)
+  gen_nation_state(url_source)
   save_csv(file_path, data_collection)
 
 
