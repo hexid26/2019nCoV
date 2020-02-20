@@ -75,6 +75,8 @@ def get_nosugar_data(url):
   sort_json("t_date", temp_json)
   for item in temp_json:
     item["t_type"] = global_place_type[int(item["t_type"]) - 1]
+    if item["t_type"] == "其他公共场所":
+      item["t_type"] = "其它公共场所"
     item["verified"] = "1"
     item["id"] = "无糖"
     item["t_created"] = item.pop("created_at")[0:10]
@@ -101,6 +103,7 @@ def get_hbgj_gtgj_data(url):
       "bus": "公交车",
       "other": "其它公共场所",
       "taxi": "出租车",
+      "其他公共场所": "其它公共场所",
       "train": "火车"
   }
   for item in temp_json:
@@ -143,7 +146,8 @@ def get_sogou_data(url):
       "火车": "火车",
       "汽车": "客车大巴",
       "大巴": "客车大巴",
-      "其他": "其它公共场所"
+      "其他": "其它公共场所",
+      "其他公共场所": "其它公共场所"
   }
   for item in temp_json:
     item["id"] = ""
@@ -179,9 +183,11 @@ def get_toutiao_data(url):
       "地铁": "地铁",
       "长途车": "客车大巴",
       "轮渡": "轮船",
+      "其他公共场所": "其它公共场所",
       "汽车": "客车大巴",
       "轻轨": "地铁",
       "邮轮": "轮船",
+      "三轮车": "其他公共场所"
   }
   for item in temp_json:
     item["id"] = ""
@@ -218,6 +224,8 @@ def get_baidu_data(url):
     item["t_start"] = datetime.fromtimestamp(item.pop("start_time")).strftime("%Y-%m-%d %H:%M:%S")
     item["t_end"] = datetime.fromtimestamp(item.pop("end_time")).strftime("%Y-%m-%d %H:%M:%S")
     item["t_type"] = global_place_type[item.pop("type") - 1]
+    if item["t_type"] == "其他公共场所":
+      item["t_type"] = "其它公共场所"
     item["t_no"] = item.pop("no")
     item["t_memo"] = item.pop("memo")
     item["t_no_sub"] = item.pop("no_sub")
@@ -250,6 +258,8 @@ def get_ali_data(url):
     item["t_end"] = datetime.fromtimestamp(int(
         item.pop("end_time"))).strftime("%Y-%m-%d %H:%M:%S")
     item["t_type"] = global_place_type[int(item.pop("type")) - 1]
+    if item["t_type"] == "其他公共场所":
+      item["t_type"] = "其它公共场所"
     item["t_no"] = item.pop("no")
     item["t_memo"] = item.pop("intro")
     item["t_no_sub"] = item.pop("no_sub")

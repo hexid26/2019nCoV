@@ -125,7 +125,8 @@ def gen_cur_data(source):
                                   re.DOTALL | re.IGNORECASE | re.MULTILINE)
         res = re.findall(json_pattern, script_item.text)
         site_json_data = json.loads(res[0])
-        json_file = open("/root/2019nCoV/json/" + cur_date + ".json", 'w', encoding='utf-8')
+        # json_file = open("/root/2019nCoV/json/" + cur_date + ".json", 'w', encoding='utf-8')
+        json_file = open("json/" + cur_date + ".json", 'w', encoding='utf-8')
         json.dump(site_json_data, json_file, ensure_ascii=False)
         json_file.close()
   #       for province in site_json_data:
